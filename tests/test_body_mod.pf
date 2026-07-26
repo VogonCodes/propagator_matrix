@@ -1,0 +1,60 @@
+module test_body_mod
+    use pfunit
+    use body_mod
+    use constants, only: dp
+    implicit none
+
+contains
+    !> Test creating and destroying body_t instance
+    @test
+    subroutine test_create_destroy()
+        type(body_t) :: body
+        integer, parameter :: N = 3
+
+        call create_body(body, N)
+
+        @assertEqual(N, body%n_layers, "Number of layers need to match")
+        @assertTrue(allocated(body%layers),&
+         "Layers array needs to be allocated")
+        @assertEqual(N, size(body%layers), "Layers array size should match N")
+
+        call destroy_body(body)
+        @assertEqual(0,body%n_layers, "n_layers should be equal to zero")
+        @assertFalse(allocated(body%layers),&
+         "Layers array should be deallocated")
+    end subroutine test_create_body
+
+    !> Test init edge case: 0 layers
+    @test
+    @expectedException(error_stop="Number of layers must be positive integer!")
+    subroutine test_create_error_1()
+        type(body_t) :: body
+        integer, parameter :: N=0
+        
+        call create_body(body, N)
+    end subroutine test_create_error_1
+
+    !> Test init negative number of layers
+    @test
+    @expectedException(error_stop="Number of layers must be positive integer!")
+    subroutine test_create_error_2()
+        type(body_t) :: body
+        integer, parameter :: N=-5
+        
+        call create_body(body, N)
+    end subroutine test_create_error_2
+
+    !> Test for memory leak
+    @test
+    subroutine test_init_twice()
+        type(body_t) :: body
+        
+        call create_body(body, 3)
+        call create_body(body,5)
+
+        @assertEqual(5, test_body%n_layers)
+        @assertTrue(allocated(test_body%layers))
+        @assertEqual(5, size(test_body%layers))
+    end subroutine test_init_twice
+
+end module
