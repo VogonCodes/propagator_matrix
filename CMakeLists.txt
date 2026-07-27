@@ -7,6 +7,9 @@ set(SRC_DIR "${PROJECT_SOURCE_DIR}/src")
 set(PROJ_SRC_FILES
 	"${SRC_DIR}/constants.f90"
 	"${SRC_DIR}/body_mod.f90"
+	"${SRC_DIR}/fileio.f90"
+	"${SRC_DIR}/helpers.f90"
+	"${SRC_DIR}/propagator.f90"
 	"${SRC_DIR}/main.f90"
 )
 
