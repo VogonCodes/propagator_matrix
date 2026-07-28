@@ -99,12 +99,11 @@ module body_mod
             write(u, '(A, F12.4)') "inner radius: ", layer%inner_radius
             write(u, '(A, F12.4)') "outer radius: ", layer%outer_radius
             write(u, '(A, F12.4)') "density: ", layer%density
-            write(u, '(A, F12.4)') "shear modulus: ", layer%shear_modulus
+            write(u, '(A, F15.6)') "shear modulus: ", layer%shear_modulus
             write(u, '(A, F12.6)') "gravity: ", layer%gravity
             write(u, '(A, F12.4)') "viscosity: ", layer%viscosity
             write(u, '(A, F12.4)') "bulk modulus: ", layer%bulk_modulus
         end subroutine
-
 
         subroutine write_body_t(body, unit)
             type(body_t), intent(in) :: body
@@ -117,13 +116,13 @@ module body_mod
                 u = 6 ! default stdo
             endif
 
-            write(u,* ) "No of layers:", body%n_layers
-            write(u, '(A, 5F12.4)') "radii (first 5 values): ", body%radius(1:min(5,body%n_layers))
-            write(u, '(A, 5F12.4)') "densities (first 5 values): ", body%density(1:min(5,body%n_layers))
-            write(u, '(A, 5F12.4)') "shear moduli (first 5 values): ", body%shear_modulus(1:min(5,body%n_layers))
-            write(u, '(A, 5F12.6)') "gravity (first 5 values): ", body%gravity(1:min(5,body%n_layers))
-            write(u, '(A, 5F12.4)') "viscosities (first 5 values): ", body%viscosity(1:min(5,body%n_layers))
-            write(u, '(A, 5F12.4)') "bulk moduli (first 5 values): ", body%bulk_modulus(1:min(5,body%n_layers))
+            write(u, *) "No of layers:", body%n_layers
+            write(u, '(A, 5(F12.4,1x))') "radii (first 5 values): ", body%radius(1:min(5,body%n_layers))
+            write(u, '(A, 5(F12.4,1x))') "densities (first 5 values): ", body%density(1:min(5,body%n_layers))
+            write(u, '(A, 5(F15.6,1x))') "shear moduli (first 5 values): ", body%shear_modulus(1:min(5,body%n_layers))
+            write(u, '(A, 5(F12.6,1x))') "gravity (first 5 values): ", body%gravity(1:min(5,body%n_layers))
+            write(u, '(A, 5(F12.4,1x))') "viscosities (first 5 values): ", body%viscosity(1:min(5,body%n_layers))
+            write(u, '(A, 5(F12.4,1x))') "bulk moduli (first 5 values): ", body%bulk_modulus(1:min(5,body%n_layers))
         end subroutine
 
 end module
