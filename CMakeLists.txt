@@ -13,7 +13,11 @@ set(PROJ_SRC_FILES
 	"${SRC_DIR}/main.f90"
 )
 
+find_package(LAPACK REQUIRED)
+
 add_executable("main" "${PROJ_SRC_FILES}")
+target_link_libraries(main ${LAPACK_LIBRARIES})
+target_include_directories(main PRIVATE ${LAPACK_INCLUDE_DIRS})
 
 ######### Testing #########
 enable_testing()
