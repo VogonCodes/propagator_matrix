@@ -16,10 +16,14 @@ contains
 
         complex(dp) :: f_matrix(6,6), finv_matrix(6,6)
         complex(dp) :: i_matrix(6,3)
-        complex(dp) :: propagator(6,6)
-        complex(dp) :: propagator_bc(6,3)
+        complex(dp) :: propagator(6,6), propagator_bc(6,3), propagator_small(3,3)
+        complex(dp) :: rhs(3)
         type(layer_t) :: layer
         integer :: i,n
+
+        ! cgesv variables
+        integer :: ipiv(3), info
+
 
         n = model%n_layers
 
@@ -30,7 +34,6 @@ contains
             if (layer%type .eq. 'v') then
                 layer%shear_modulus = calculate_mu_laplace(layer%shear_modulus, layer%viscosity, s)
             endif
-            call write_layer_t(layer,6)
             call assemble_fundamental_matrix_solid(layer, degree, f_matrix)
             call assemble_fundamental_matrix_solid_inverse(layer, degree, finv_matrix)
             propagator = matmul(matmul(propagator,f_matrix), finv_matrix)
@@ -38,10 +41,32 @@ contains
 
         ! apply boundary conditions
         call assemble_interface_matrix_solid(layer, degree, i_matrix)
+
+        ! solve for vector C
         propagator_bc = matmul(propagator, i_matrix)
 
+        ! copy to 3x3 matrix
+        propagator_small(1,:) = propagator_bc(3,:)
+        propagator_small(2,:) = propagator_bc(4,:)
+        propagator_small(3,:) = propagator_bc(6,:)
 
+        ! geth rhs
+        call tidal_forcing_vector(degree, model%radius(1), rhs)
 
+        ! solve system of linear equations
+        ! cgesv(n, nrhs, a, lda, ipiv, b, ldb, info)
+        ! out: 
+        !   A = P*L*U
+        !   ipiv: pivot indices defining P
+        !   b: solution if info == 0
+        !   info: ==0 -> success; >0 -> u(i,i)==0; <0 -> i-th argument invalid
+        call cgesv(3, 1, propagator_small, 3, ipiv, rhs, 3, info)
+
+        if (.not. (info .eq. 0) ) then
+            error stop "upsik"
+        endif
+
+        solution = matmul(propagator_bc, rhs)
     end subroutine
 
     !-------------------------------------------------------------------------------------------------------------
@@ -218,5 +243,15 @@ contains
         interface_matrix(6,2) = 4*PI*G*rho*rlm1
         interface_matrix(6,3) = -(2*degree+1._dp) * rlm1
     end subroutine
+
+    subroutine tidal_forcing_vector(degree, radius, forcing)
+        integer, intent(in) :: degree
+        real(dp), intent(in) :: radius
+        complex(dp), intent(out) :: forcing(3)
+
+        forcing = 0.0_dp
+        forcing(3) = -(2*degree+1._dp)/radius
+    end subroutine
+
 
 end module
