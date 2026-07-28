@@ -2,6 +2,11 @@ module body_mod
     use constants, only: dp
     implicit none
 
+    type layer_t
+        real(dp) :: outer_radius, inner_radius, density, gravity, shear_modulus, viscosity, bulk_modulus
+        character :: type
+    end type
+
     type :: body_t
         integer :: n_layers
         real(dp), allocatable :: radius(:), density(:), shear_modulus(:), gravity(:), viscosity(:), bulk_modulus(:)
@@ -48,6 +53,58 @@ module body_mod
             end if
             body%n_layers = 0
         end subroutine
+
+        subroutine get_layer(body, i, layer)
+            type(body_t), intent(in) :: body
+            integer, intent(in) :: i
+            type(layer_t), intent(out) :: layer
+
+            if (i .gt. body%n_layers) then
+                error stop "Layer index greater than no of layers!"
+            endif
+
+            if (i .lt. body%n_layers) then
+                layer%inner_radius = body%radius(i+1)
+            else
+                layer%inner_radius = 0._dp
+            endif
+            layer%outer_radius = body%radius(i)
+            layer%density = body%density(i)
+            layer%gravity = body%gravity(i)
+            layer%viscosity = body%viscosity(i)
+            layer%shear_modulus = body%shear_modulus(i)
+            layer%bulk_modulus = body%bulk_modulus(i)
+
+            if (layer%shear_modulus .eq. 0._dp) then
+                layer%type = 'f' ! fluid
+            else if (layer%viscosity .eq. 0._dp) then
+                layer%type = 'e' ! elastic
+            else 
+                layer%type = 'v' ! viscoelastic
+            endif
+        end subroutine
+
+        subroutine write_layer_t(layer, unit)
+            type(layer_t), intent(in) :: layer
+            integer, intent(in), optional :: unit
+            integer :: u
+
+            if (present(unit)) then
+                u = unit
+            else
+                u = 6 ! default stdo
+            endif
+
+            write(u, '(A,A)') "type of layer: ", layer%type
+            write(u, '(A, F12.4)') "inner radius: ", layer%inner_radius
+            write(u, '(A, F12.4)') "outer radius: ", layer%outer_radius
+            write(u, '(A, F12.4)') "density: ", layer%density
+            write(u, '(A, F12.4)') "shear modulus: ", layer%shear_modulus
+            write(u, '(A, F12.6)') "gravity: ", layer%gravity
+            write(u, '(A, F12.4)') "viscosity: ", layer%viscosity
+            write(u, '(A, F12.4)') "bulk modulus: ", layer%bulk_modulus
+        end subroutine
+
 
         subroutine write_body_t(body, unit)
             type(body_t), intent(in) :: body
